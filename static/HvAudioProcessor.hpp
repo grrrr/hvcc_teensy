@@ -137,7 +137,7 @@ private:
 
   static void sendHook(HeavyContextInterface *c, const char *receiverName, unsigned int receiverHash, const HvMessage *m)
   {
-    if(!strcmp(receiverName, "HV_TO_PD")) {
+    if(!strcmp(receiverName, "HV_TO_TEENSY")) {
       double timestampMs = 1000.0 * ((double) ::hv_msg_getTimestamp(m)) / c->getSampleRate();
       getThis(c)->receive(timestampMs, receiverName, m);
     }
