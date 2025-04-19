@@ -18,7 +18,7 @@ public:
 
   HvAudioProcessor(const AudioSettings_F32 &settings): 
     AudioStream_F32(inputs, inputQueueArray_f32),
-    hv_instance(AUDIO_SAMPLE_RATE_EXACT)
+    hv_instance(settings.sample_rate_Hz)
   {
     init();
   }
@@ -100,13 +100,13 @@ protected:
     return hv_instance.sendSymbolToReceiver(hv_stringToHash(receiver), s);
   }
 
-  virtual void receive(double timestamp, const char *receiverName, const HvMessage *m) 
+  virtual void receive(double timestampMs, const char *receiverName, const HvMessage *m) 
   {
   }
 
-  virtual void print(double timestamp, const char *receiverName, const char *msgString) 
+  virtual void print(double timestampMs, const char *receiverName, const char *msgString) 
   {
-    printf("[%s] @ %g - %s: %s\n", hv_instance.getName(), timestamp, receiverName, msgString);
+    printf("[%s] @ %g - %s: %s\n", hv_instance.getName(), timestampMs, receiverName, msgString);
   }
 
 private:
