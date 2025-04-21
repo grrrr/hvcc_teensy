@@ -1,0 +1,29 @@
+[project]
+name = "hvcc_teensy"
+version = "0.0.1"
+authors = [
+  { name="Thomas Grill", email="gr@grrrr.org" },
+]
+description = "hvcc for Teensy"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-2.0-or-later"
+dependencies = ["hvcc"]
+
+[project.urls]
+Homepage = "https://github.com/grrrr/hvcc_teensy"
+Issues = "https://github.com/grrrr/hvcc_teensy/issues"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["hvcc_teensy"]
+
+[tool.setuptools.package-data]
+"hvcc_teensy" = ['static/*','templates/*','examples/*/*']

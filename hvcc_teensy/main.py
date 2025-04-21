@@ -6,8 +6,8 @@ import time
 import jinja2
 from typing import Optional
 
-#from ..copyright import copyright_manager
-#from ..filters import filter_max
+from hvcc.generators.copyright import copyright_manager
+from hvcc.generators.filters import filter_max
 
 from hvcc.interpreters.pd2hv.NotificationEnum import NotificationEnum
 from hvcc.types.compiler import Generator, CompilerResp, CompilerNotif, CompilerMsg, ExternInfo
@@ -37,7 +37,7 @@ class hvcc_teensy(Generator):
         out_dir = os.path.join(out_dir, "teensy")
         receiver_list = externs.parameters.inParam
 
-        copyright = "grrrr.org, 2025"
+        copyright = copyright_manager.get_copyright_for_c("grrrr.org, 2025")
 
         patch_name = patch_name or "heavy"
         ext_name = f"{patch_name}"
@@ -59,7 +59,7 @@ class hvcc_teensy(Generator):
         try:
             # initialise the jinja template environment
             env = jinja2.Environment()
-#            env.filters["max"] = filter_max
+            env.filters["max"] = filter_max
             env.loader = jinja2.FileSystemLoader(
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"))
 

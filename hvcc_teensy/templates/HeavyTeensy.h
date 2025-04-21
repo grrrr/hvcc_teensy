@@ -1,3 +1,5 @@
+{{copyright}}
+
 #include "Heavy_{{name}}.h"
 #include "Heavy_{{name}}.hpp"
 #include "HvAudioProcessor.hpp"

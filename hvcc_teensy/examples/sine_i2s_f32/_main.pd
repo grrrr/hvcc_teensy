@@ -1,0 +1,13 @@
+#N canvas 93 127 289 248 12;
+#X obj 45 190 dac~ 1 2;
+#X obj 44 87 osc~ 433;
+#X obj 45 134 *~ 0.1;
+#X obj 129 86 dbtorms;
+#X obj 44 34 r frq;
+#X obj 129 33 r vol;
+#X connect 1 0 2 0;
+#X connect 2 0 0 0;
+#X connect 2 0 0 1;
+#X connect 3 0 2 1;
+#X connect 4 0 1 0;
+#X connect 5 0 3 0;
