@@ -10,13 +10,24 @@ python3 -m venv venv
 pip install hvcc_teensy
 ```
 
-This depends on the [Teensy Audio library](https://github.com/PaulStoffregen/Audio) and on [OpenAudio_ArduinoLibrary](https://github.com/chipaudette/OpenAudio_ArduinoLibrary) for float processing extensions.
+## Generation
 
-The [Pure data](https://puredata.info)-type DSP patch is in `_main.pd`.
+The following translates the Puredata patch `_main.pd` into C++ files in a folder `$DST`.
+The object ("context") will also be called `$NAME`:
 
-Call hvcc-type generator hvcc_teensy with:
 ```
-hvcc _main.pd -n $name -o $dstdir -G hvcc_teensy.hvcc_teensy
+hvcc _main.pd -n $NAME -o $DST -G hvcc_teensy
 ```
 
-The Arduino-style library code will be written to `$dstdir` with a header file `$name.h` which can be included in the Arduino program.
+## Usage
+
+The contents of the subfolder `$DST/teensy` represent library code usable in the Arduino environment.
+There are (potential) standard locations for these libraries:
+
+- MacOS/Linux: `$HOME/Arduino/libraries/`
+- Windows: `My Documents\Arduino\libraries`
+
+In the generated library folder will be a header file `$NAME.h` to be included in the Arduino program.
+
+The produced code depends on the [Teensy Audio library](https://github.com/PaulStoffregen/Audio).
+If `OPENAUDIO` is `#define`d before including the `$NAME.h` header file, the code will depend on [OpenAudio_ArduinoLibrary](https://github.com/chipaudette/OpenAudio_ArduinoLibrary) for float_32 processing extensions.

@@ -11,9 +11,9 @@
   #define AudioStream_CLASS AudioStream
   #define audio_block_TYPE audio_block_t
   #define sample_TYPE int16_t
-  #define SAMPLE_MIN (-(1<<(sizeof(sample_TYPE)*8))
+  #define SAMPLE_MIN (-(1<<(sizeof(sample_TYPE)*8)))
   #define SAMPLE_MAX ((1<<(sizeof(sample_TYPE)*8))-1)
-  #define SAMPLE_SCALE (float(SAMPLE_MAX))
+  #define SAMPLE_SCALE ((float)(SAMPLE_MAX))
 #endif
 
 #include "HeavyContext.hpp"
@@ -49,21 +49,22 @@ protected:
     for(i = 0; i < outputs; i++) {
 #ifdef OPENAUDIO
       outputBlocks[i] = AudioStream_CLASS::receiveWritable_f32(i);
-#else
-      outputBlocks[i] = AudioStream_CLASS::receiveWritable(i);
-#endif
       if(!outputBlocks[i]) 
         ok = false;
-#ifdef OPENAUDIO
       else
         outputArray[i] = outputBlocks[i]->data;
-#endif
       if(n != outputBlocks[i]->length) {
         if(n)
           ok = false;
         else
           n = outputBlocks[i]->length;
       }
+#else
+      outputBlocks[i] = AudioStream_CLASS::receiveWritable(i);
+      if(!outputBlocks[i]) 
+        ok = false;
+      n = AUDIO_BLOCK_SAMPLES;
+#endif
     }
 
     if(!ok) goto release;
@@ -72,7 +73,7 @@ protected:
     // we need to copy and scale data
     for(i = 0; i < inputs; ++i) {
       for(int o = 0; o < n; ++o)
-      inputArray[i][o] = float(inputQueueArray[i]->data[o])*(1./SAMPLE_SCALE);
+      input_tmp[i][o] = float(inputQueueArray[i]->data[o])*(1./SAMPLE_SCALE);
     }
 #endif
 
@@ -82,7 +83,7 @@ protected:
 #ifndef OPENAUDIO
       // we need to copy and scale data
       for(int o = 0; o < n; ++o)
-        outputBlocks[i]->data[o] = int(min(max(SAMPLE_MIN, outputArray[i][o]*SAMPLE_SCALE+0.5), SAMPLE_MAX));
+        outputBlocks[i]->data[o] = (int)(min(SAMPLE_MAX, max(SAMPLE_MIN, output_tmp[i][o]*SAMPLE_SCALE+0.5)));
 #endif
       AudioStream_CLASS::transmit(outputBlocks[i], i);
     }
@@ -148,12 +149,11 @@ protected:
 private:
   hv_class hv_instance;
 
-#ifdef OPENAUDIO
   float *inputArray[inputs];
   float *outputArray[outputs];
-#else
-  float inputArray[inputs][AUDIO_BLOCK_SIZE];
-  float outputArray[outputs][AUDIO_BLOCK_SIZE];
+#ifndef OPENAUDIO
+  float input_tmp[inputs][AUDIO_BLOCK_SAMPLES];
+  float output_tmp[outputs][AUDIO_BLOCK_SAMPLES];
 #endif
 
   audio_block_TYPE *inputQueueArray[inputs];
@@ -161,10 +161,14 @@ private:
   void init()
   {
     hv_instance.setUserData(this);
+    for(int i = 0; i < inputs; ++i) {
 #ifdef OPENAUDIO
-    for(int i = 0; i < inputs; ++i)
       inputArray[i] = inputQueueArray[i]->data;
+#else
+      inputArray[i] = input_tmp[i];
+      outputArray[i] = output_tmp[i];
 #endif
+    }
   }
 
   static HvAudioProcessor<hv_class,inputs,outputs> *getThis(HeavyContextInterface *c)

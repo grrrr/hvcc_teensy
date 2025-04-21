@@ -5,6 +5,7 @@ import shutil
 import time
 import jinja2
 from typing import Optional
+from pydantic import BaseModel
 
 from hvcc.generators.copyright import copyright_manager
 from hvcc.generators.filters import filter_max
@@ -31,6 +32,8 @@ class hvcc_teensy(Generator):
         copyright: Optional[str] = None,
         verbose: Optional[bool] = False
     ) -> CompilerResp:
+
+        print("META:", patch_meta)
 
         tick = time.time()
 
@@ -73,7 +76,9 @@ class hvcc_teensy(Generator):
                     num_input_channels=num_input_channels,
                     num_output_channels=num_output_channels,
                     receivers=receiver_list,
-                    copyright=copyright))
+                    copyright=copyright,
+                    OPENAUDIO=0
+                ))
 
             # generate Makefile from template
 #            teensy_path = os.path.join(out_dir, "../Makefile")
