@@ -33,8 +33,6 @@ class hvcc_teensy(Generator):
         verbose: Optional[bool] = False
     ) -> CompilerResp:
 
-        print("META:", patch_meta)
-
         tick = time.time()
 
         out_dir = os.path.join(out_dir, "teensy")
