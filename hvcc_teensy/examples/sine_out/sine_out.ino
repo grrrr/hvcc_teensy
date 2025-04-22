@@ -1,7 +1,7 @@
 #include <Audio.h>
-#include <sine_i2s.h>
+#include <sine_out.h>
 
-sine_i2s heavy;
+sine_out heavy;
 AudioOutputI2S i2sout;
 AudioConnection patchCordL(heavy, 0, i2sout, 0), patchCordR(heavy, 1, i2sout, 1);
 
