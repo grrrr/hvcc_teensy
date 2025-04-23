@@ -1,13 +1,13 @@
 #include <OpenAudio_ArduinoLibrary.h>
 
-#define OPENAUDIO 1
-#include <sine_i2s_f32.h>
+#include <sine_out_f32.h>
 
-sine_i2s_f32 heavy;
+sine_out_f32 heavy;
 AudioOutputI2S_F32 i2sout;
 AudioConnection_F32 patchCordL(heavy, 0, i2sout, 0), patchCordR(heavy, 1, i2sout, 1);
 
-void setup() {
+void setup() 
+{
   AudioMemory_F32(8);
 }
 

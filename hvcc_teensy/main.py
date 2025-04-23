@@ -64,6 +64,17 @@ class hvcc_teensy(Generator):
             env.loader = jinja2.FileSystemLoader(
                 os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"))
 
+            defines = ""
+            try:
+                external_meta = patch_meta.external
+            except:
+                external_meta = None
+
+            if external_meta is not None:
+                result = external_meta.get("OPENAUDIO")
+                if result is not None:
+                    defines = f"#define OPENAUDIO {result}"
+
             # generate Arduino-style source from template
             teensy_path = os.path.join(out_dir, f"{ext_name}.h")
             with open(teensy_path, "w") as f:
@@ -75,7 +86,7 @@ class hvcc_teensy(Generator):
                     num_output_channels=num_output_channels,
                     receivers=receiver_list,
                     copyright=copyright,
-                    OPENAUDIO=0
+                    defines=defines,
                 ))
 
             # generate Makefile from template

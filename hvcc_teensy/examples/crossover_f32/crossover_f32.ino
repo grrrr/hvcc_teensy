@@ -1,7 +1,6 @@
 #include <OpenAudio_ArduinoLibrary.h>
 #include <hexefx_audiolib_F32.h>
 
-#define OPENAUDIO
 #include <crossover_f32.h>
 
 AudioInputI2S_F32 i2sin;

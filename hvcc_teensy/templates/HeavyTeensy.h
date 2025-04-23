@@ -3,6 +3,8 @@
 #ifndef HeavyTeensy_{{name}}_h
 #define HeavyTeensy_{{name}}_h
 
+{{defines}}
+
 #include "Heavy_{{name}}.h"
 #include "Heavy_{{name}}.hpp"
 
