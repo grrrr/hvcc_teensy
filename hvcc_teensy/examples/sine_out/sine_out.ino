@@ -3,10 +3,12 @@
 
 sine_out heavy;
 AudioOutputI2S i2sout;
-AudioConnection patchCordL(heavy, 0, i2sout, 0), patchCordR(heavy, 1, i2sout, 1);
+AudioConnection patchCordL(heavy, 0, i2sout, 0), patchCordR(heavy, 0, i2sout, 1);
 
 void setup() {
   AudioMemory(8);
+  heavy.sendfloat("frq", 200);
+  heavy.sendfloat("vol", -20);
 }
 
 void loop() 

@@ -5,8 +5,10 @@
 #X obj 50 111 osc~ 433;
 #X obj 50 148 *~ 0.01;
 #X obj 123 112 dbtorms;
+#X obj 124 76 + 100;
 #X connect 1 0 3 0;
-#X connect 2 0 5 0;
+#X connect 2 0 6 0;
 #X connect 3 0 4 0;
 #X connect 4 0 0 0;
 #X connect 5 0 4 1;
+#X connect 6 0 5 0;

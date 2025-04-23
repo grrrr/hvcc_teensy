@@ -84,57 +84,121 @@ public:
   }
 
 protected:
+
+#ifdef OPENAUDIO
+  typedef audio_block_TYPE audio_block_t;
+  audio_block_t *allocate() { return AudioStream_CLASS::allocate_f32(); }
+  audio_block_t *receiveReadOnly(unsigned int index = 0) { return AudioStream_CLASS::receiveReadOnly_f32(index); }
+  audio_block_t *receiveWritable(unsigned int index = 0) { return AudioStream_CLASS::receiveWritable_f32(index); }
+  void transmit(audio_block_t *block, unsigned char index = 0) { AudioStream_CLASS::transmit(block, index); }
+  void release(audio_block_t *block) { AudioStream_CLASS::release(block); }
+  static int blocklength(const audio_block_t *block) { return block->length; }
+#else
+  static int blocklength(const audio_block_t *block) { return AUDIO_BLOCK_SAMPLES; }
+#endif
+
   void update()
   {
-    audio_block_TYPE *outputBlocks[outputs];
+    /*
+    - receiveReadOnly() for input data that is not reused/changed for output
+    - receiveWritable() for input data that is reused/changed for output
+    - allocate() for output data without using input blocks
+
+    - transmit() to pass on audio data
+    - release() to release audio data
+    */
+
+    audio_block_t *inputBlocks[inputs], *outputBlocks[outputs];
+    float *inputArray[inputs], *outputArray[outputs];
     int i;
     bool ok = true;
-    int n = 0;
-    for(i = 0; i < outputs; i++) {
-#if OPENAUDIO
-      outputBlocks[i] = AudioStream_CLASS::receiveWritable_f32(i);
-      if(!outputBlocks[i]) 
-        ok = false;
-      else
-        outputArray[i] = outputBlocks[i]->data;
-      if(n != outputBlocks[i]->length) {
-        if(n)
-          ok = false;
-        else
-          n = outputBlocks[i]->length;
-      }
-#else
-      outputBlocks[i] = AudioStream_CLASS::receiveWritable(i);
-      if(!outputBlocks[i]) 
-        ok = false;
-      n = AUDIO_BLOCK_SAMPLES;
-#endif
-    }
+    int n = AUDIO_BLOCK_SAMPLES;
 
-    if(!ok) goto release;
-
-#if !(OPENAUDIO)
-    // we need to copy and scale data
+#if 0
+    // safe mode - don't reuse blocks
     for(i = 0; i < inputs; ++i) {
-      for(int o = 0; o < n; ++o)
-      input_tmp[i][o] = float(inputQueueArray[i]->data[o])*(1./SAMPLE_SCALE);
-    }
+      inputBlocks[i] = receiveReadOnly(i);
+      if(blocklength(inputBlocks[i]) == n) {
+#if OPENAUDIO
+        inputArray[i] = inputBlocks[i]->data;
+#else
+        inputArray[i] = input_tmp[i];
+        for(int o = 0; o < n; ++n)
+          inputArray[i][o] = float(inputBlocks[i]->data[o])*(1./SAMPLE_SCALE);
 #endif
+      }
+      else
+        ok = false;
+    }
+    for(i = 0; i < outputs; ++i) {
+      outputBlocks[i] = allocate();
+#if OPENAUDIO
+      outputArray[i] = outputBlocks[i]->data;
+#else
+      outputArray[i] = output_tmp[i];
+#endif
+    }
 
-    hv_instance.process(inputArray, outputArray, n);
+    if(ok) {
+      hv_instance.process(inputArray, outputArray, n);
+
+      for(i = 0; i < outputs; ++i) {
+#if !(OPENAUDIO)
+        for(int o = 0; o < n; ++o)
+          outputBlocks[i]->data[o] = (int)(min(SAMPLE_MAX, max(SAMPLE_MIN, outputArray[i][o]*SAMPLE_SCALE+0.5)));
+#endif
+        transmit(outputBlocks[i], i);
+      }
+    }
+
+    for(i = 0; i < inputs; ++i)
+      release(inputBlocks[i]);
+    for(i = 0; i < outputs; ++i)
+      release(outputBlocks[i]);
+#else
+    // reuse audio blocks
+    for(i = 0; i < inputs; ++i) {
+      // reuse input blocks for output
+      inputBlocks[i] = i < outputs?receiveWritable(i):receiveReadOnly(i);
+      if(blocklength(inputBlocks[i]) == n) {
+#if OPENAUDIO
+        inputArray[i] = inputBlocks[i]->data;
+#else
+        inputArray[i] = input_tmp[i];
+        for(int o = 0; o < n; ++n)
+          inputArray[i][o] = float(inputBlocks[i]->data[o])*(1./SAMPLE_SCALE);
+#endif
+      }
+      else
+        ok = false;
+    }
 
     for(i = 0; i < outputs; ++i) {
-#if !(OPENAUDIO)
-      // we need to copy and scale data
-      for(int o = 0; o < n; ++o)
-        outputBlocks[i]->data[o] = (int)(min(SAMPLE_MAX, max(SAMPLE_MIN, output_tmp[i][o]*SAMPLE_SCALE+0.5)));
+      outputBlocks[i] = i < inputs?inputBlocks[i]:allocate();
+#if OPENAUDIO
+      outputArray[i] = outputBlocks[i]->data;
+#else
+      outputArray[i] = output_tmp[i];
 #endif
-      AudioStream_CLASS::transmit(outputBlocks[i], i);
     }
 
-    release:
-    for(i = 0; i < outputs; ++i)
-      AudioStream_CLASS::release(outputBlocks[i]);
+    if(ok) {
+      hv_instance.process(inputArray, outputArray, n);
+
+      for(i = 0; i < outputs; ++i) {
+#if !(OPENAUDIO)
+        for(int o = 0; o < n; ++o)
+          outputBlocks[i]->data[o] = (int)(min(SAMPLE_MAX, max(SAMPLE_MIN, outputArray[i][o]*SAMPLE_SCALE+0.5)));
+#endif
+        transmit(outputBlocks[i], i);
+      }
+    }
+
+    for(i = 0; i < inputs; ++i)
+      release(inputBlocks[i]);
+    for(; i < outputs; ++i)
+      release(outputBlocks[i]);
+#endif
   }
 
   virtual void receive(double timestampMs, const char *receiverName, const HvMessage *m) 
@@ -149,8 +213,6 @@ protected:
 private:
   hv_class hv_instance;
 
-  float *inputArray[inputs];
-  float *outputArray[outputs];
 #if !(OPENAUDIO)
   float input_tmp[inputs][AUDIO_BLOCK_SAMPLES];
   float output_tmp[outputs][AUDIO_BLOCK_SAMPLES];
@@ -161,6 +223,7 @@ private:
   void init()
   {
     hv_instance.setUserData(this);
+#if 0
     for(int i = 0; i < inputs; ++i) {
 #if OPENAUDIO
       inputArray[i] = inputQueueArray[i]->data;
@@ -169,6 +232,7 @@ private:
       outputArray[i] = output_tmp[i];
 #endif
     }
+#endif
   }
 
   static HvAudioProcessor<hv_class,inputs,outputs> *getThis(HeavyContextInterface *c)
