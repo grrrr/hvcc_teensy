@@ -29,5 +29,5 @@ There are (potential) standard locations for these libraries:
 
 In the generated library folder will be a header file `$NAME.h` to be included in the Arduino program.
 
-The produced code depends on the [Teensy Audio library](https://github.com/PaulStoffregen/Audio).
-If `OPENAUDIO=1` is `#define`d before including the `$NAME.h` header file, the code will depend on [OpenAudio_ArduinoLibrary](https://github.com/chipaudette/OpenAudio_ArduinoLibrary) for float_32 processing extensions.
+The produced code depends on the [Teensy core library](https://github.com/PaulStoffregen/cores).
+If `OPENAUDIO=1` is `#define`d before including the `$NAME.h` header file, the code will depend on [OpenAudio_ArduinoLibrary](https://github.com/chipaudette/OpenAudio_ArduinoLibrary) for float_32 audio processing extensions.
