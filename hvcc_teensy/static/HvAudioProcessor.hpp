@@ -39,6 +39,50 @@ public:
   }
 #endif
 
+  bool sendmessage(const char *receiver, const HvMessage *msg, double delay=0)
+  {
+    return hv_instance.sendMessageToReceiver(hv_stringToHash(receiver), delay, msg);
+  }
+
+  bool sendmessage(const char *receiver, const char *format, ...)
+  {
+    hv_assert(format != nullptr);
+    double delayMs = 0;
+
+    va_list ap;
+    va_start(ap, format);
+    const int numElem = (int) hv_strlen(format);
+    HvMessage *m = HV_MESSAGE_ON_STACK(numElem);
+    msg_init(m, numElem, hv_instance.blockStartTimestamp + (hv_uint32_t) (hv_max_d(0.0, delayMs)*hv_instance.getSampleRate()/1000.0));
+    for (int i = 0; i < numElem; i++) {
+      switch (format[i]) {
+        case 'b': msg_setBang(m, i); break;
+        case 'f': msg_setFloat(m, i, (float) va_arg(ap, double)); break;
+        case 'h': msg_setHash(m, i, (int) va_arg(ap, int)); break;
+        case 's': msg_setSymbol(m, i, (char *) va_arg(ap, char *)); break;
+        default: break;
+      }
+    }
+    va_end(ap);
+
+    return sendmessage(receiver, m, delayMs);
+  }
+
+  bool sendfloat(const char *receiver, float f)
+  {
+    return hv_instance.sendFloatToReceiver(hv_stringToHash(receiver), f);
+  }
+
+  bool sendbang(const char *receiver)
+  {
+    return hv_instance.sendBangToReceiver(hv_stringToHash(receiver));
+  }
+
+  bool sendsymbol(const char *receiver, const char *s)
+  {
+    return hv_instance.sendSymbolToReceiver(hv_stringToHash(receiver), s);
+  }
+
 protected:
   void update()
   {
@@ -91,50 +135,6 @@ protected:
     release:
     for(i = 0; i < outputs; ++i)
       AudioStream_CLASS::release(outputBlocks[i]);
-  }
-
-  bool sendmessage(const char *receiver, const HvMessage *msg, double delay=0) 
-  {
-    return hv_instance.sendMessageToReceiver(hv_stringToHash(receiver), delay, msg);
-  }
-
-  bool sendmessage(const char *receiver, const char *format, ...) 
-  {
-    hv_assert(format != nullptr);
-    double delayMs = 0;
-
-    va_list ap;
-    va_start(ap, format);
-    const int numElem = (int) hv_strlen(format);
-    HvMessage *m = HV_MESSAGE_ON_STACK(numElem);
-    msg_init(m, numElem, hv_instance.blockStartTimestamp + (hv_uint32_t) (hv_max_d(0.0, delayMs)*hv_instance.getSampleRate()/1000.0));
-    for (int i = 0; i < numElem; i++) {
-      switch (format[i]) {
-        case 'b': msg_setBang(m, i); break;
-        case 'f': msg_setFloat(m, i, (float) va_arg(ap, double)); break;
-        case 'h': msg_setHash(m, i, (int) va_arg(ap, int)); break;
-        case 's': msg_setSymbol(m, i, (char *) va_arg(ap, char *)); break;
-        default: break;
-      }
-    }
-    va_end(ap);
-
-    return sendmessage(receiver, m, delayMs);
-  }
-
-  bool sendfloat(const char *receiver, float f)
-  {
-    return hv_instance.sendFloatToReceiver(hv_stringToHash(receiver), f);
-  }
-
-  bool sendbang(const char *receiver) 
-  {
-    return hv_instance.sendBangToReceiver(hv_stringToHash(receiver));
-  }
-
-  bool sendsymbol(const char *receiver, const char *s) 
-  {
-    return hv_instance.sendSymbolToReceiver(hv_stringToHash(receiver), s);
   }
 
   virtual void receive(double timestampMs, const char *receiverName, const HvMessage *m) 

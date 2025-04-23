@@ -14,3 +14,4 @@ install:
 
 clean:
 	rm -fr $(DST)
+	rm meta.json
