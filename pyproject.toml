@@ -9,10 +9,14 @@ readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
     "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
 ]
-license = "GPL-2.0-or-later"
+license = "GPL-3.0-or-later"
 dependencies = ["hvcc"]
+
 
 [project.urls]
 Homepage = "https://github.com/grrrr/hvcc_teensy"

@@ -14,11 +14,11 @@ build_wheel:
         - default
     image: $CI_REGISTRY/docker/py_packager
     script:
-        - pip wheel --wheel-dir build --no-deps .
+        - pip wheel --wheel-dir dist --no-deps .
     artifacts:
         expire_in: 1 hour
         paths:
-            - "build/${CI_PROJECT_NAME}-*.whl"
+            - "dist/${CI_PROJECT_NAME}-*.whl"
 
 # --------------------------------------------------------------
 # Test integrity of built package
@@ -30,7 +30,7 @@ test_wheel:
         - default
     image: $CI_REGISTRY/docker/py_packager
     script:
-        - twine check build/*
+        - twine check dist/*
 
 # --------------------------------------------------------------
 # Upload package to pypi
@@ -45,7 +45,7 @@ upload_wheel:
         - default
     image: $CI_REGISTRY/docker/py_packager
     script:
-        - twine upload . build/*
+        - twine upload dist/*
 
 # --------------------------------------------------------------
 # Push repo to github
