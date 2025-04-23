@@ -1,0 +1,63 @@
+stages:
+    - build
+    - test
+    - deploy
+    - push
+
+# --------------------------------------------------------------
+# Build package
+# --------------------------------------------------------------
+build_wheel:
+    stage: build
+    tags:
+        - docker
+        - default
+    image: $CI_REGISTRY/docker/py_packager
+    script:
+        - pip wheel --wheel-dir build --no-deps .
+    artifacts:
+        expire_in: 1 hour
+        paths:
+            - "build/${CI_PROJECT_NAME}-*.whl"
+
+# --------------------------------------------------------------
+# Test integrity of built package
+# --------------------------------------------------------------
+test_wheel:
+    stage: test
+    tags:
+        - docker
+        - default
+    image: $CI_REGISTRY/docker/py_packager
+    script:
+        - twine check build/*
+
+# --------------------------------------------------------------
+# Upload package to pypi
+# --------------------------------------------------------------
+upload_wheel:
+    stage: deploy
+    rules:
+        - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    allow_failure: true
+    tags:
+        - docker
+        - default
+    image: $CI_REGISTRY/docker/py_packager
+    script:
+        - twine upload . build/*
+
+# --------------------------------------------------------------
+# Push repo to github
+# --------------------------------------------------------------
+push_github:
+    stage: push
+    rules:
+        - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+    allow_failure: true
+    tags:
+        - docker
+        - default
+    image: $CI_REGISTRY/docker/push_github
+    script:
+        - echo "Pushing to github"
