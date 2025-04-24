@@ -201,7 +201,7 @@ protected:
 #endif
   }
 
-  virtual void receive(double timestampMs, const char *receiverName, const HvMessage *m) 
+  virtual void receive(double timestampMs, const HvMessage *m)
   {
   }
 
@@ -213,26 +213,18 @@ protected:
 private:
   hv_class hv_instance;
 
+  audio_block_TYPE *inputQueueArray[inputs];
+
 #if !(OPENAUDIO)
   float input_tmp[inputs][AUDIO_BLOCK_SAMPLES];
   float output_tmp[outputs][AUDIO_BLOCK_SAMPLES];
 #endif
 
-  audio_block_TYPE *inputQueueArray[inputs];
-
   void init()
   {
     hv_instance.setUserData(this);
-#if 0
-    for(int i = 0; i < inputs; ++i) {
-#if OPENAUDIO
-      inputArray[i] = inputQueueArray[i]->data;
-#else
-      inputArray[i] = input_tmp[i];
-      outputArray[i] = output_tmp[i];
-#endif
-    }
-#endif
+    hv_instance.setPrintHook(printHook);
+    hv_instance.setSendHook(sendHook);
   }
 
   static HvAudioProcessor<hv_class,inputs,outputs> *getThis(HeavyContextInterface *c)
@@ -246,11 +238,11 @@ private:
     getThis(c)->print(timestampMs, receiverName, msgString);
   }
 
-  static void sendHook(HeavyContextInterface *c, const char *receiverName, unsigned int receiverHash, const HvMessage *m)
+  static void sendHook(HeavyContextInterface *c, const char *receiverName, hv_uint32_t receiverHash, const HvMessage *m)
   {
     if(!strcmp(receiverName, "HV_TO_TEENSY")) {
       double timestampMs = 1000.0 * ((double) ::hv_msg_getTimestamp(m)) / c->getSampleRate();
-      getThis(c)->receive(timestampMs, receiverName, m);
+      getThis(c)->receive(timestampMs, m);
     }
   }
 };
