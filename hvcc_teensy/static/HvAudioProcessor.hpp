@@ -1,3 +1,5 @@
+/** grrrr.org, 2025 */
+
 #ifndef _HvAudioProcessor_hpp
 #define _HvAudioProcessor_hpp
 
@@ -115,57 +117,85 @@ protected:
     int n = AUDIO_BLOCK_SAMPLES;
 
 #if 0
+    // ------------------------------
     // safe mode - don't reuse blocks
+    // ------------------------------
+
     for(i = 0; i < inputs; ++i) {
+      // we are conservative, don't reuse input audio blocks for output
       inputBlocks[i] = receiveReadOnly(i);
-      if(blocklength(inputBlocks[i]) == n) {
+      if(inputBlocks[i] && blocklength(inputBlocks[i]) == n) {
 #if OPENAUDIO
+        // directly use audio buffer for heavy
         inputArray[i] = inputBlocks[i]->data;
 #else
+        // use temporary block (int16 type) and scale input
         inputArray[i] = input_tmp[i];
-        for(int o = 0; o < n; ++n)
+        for(int o = 0; o < n; ++o)
           inputArray[i][o] = float(inputBlocks[i]->data[o])*(1./SAMPLE_SCALE);
 #endif
       }
       else
         ok = false;
     }
+
     for(i = 0; i < outputs; ++i) {
+      // for output, we allocate new blocks (don't reuse input buffers)
       outputBlocks[i] = allocate();
+      if(outputBlocks[i]) {
 #if OPENAUDIO
-      outputArray[i] = outputBlocks[i]->data;
+        // directly use audio buffer for heavy
+        outputArray[i] = outputBlocks[i]->data;
 #else
-      outputArray[i] = output_tmp[i];
+        // use temporary block (int16 type)
+        outputArray[i] = output_tmp[i];
 #endif
+      }
+      else ok = false;
     }
 
     if(ok) {
+      // perform heavy DSP
       hv_instance.process(inputArray, outputArray, n);
 
       for(i = 0; i < outputs; ++i) {
 #if !(OPENAUDIO)
+        // we have to scale heavy output to int16 teensy Audio buffers
         for(int o = 0; o < n; ++o)
           outputBlocks[i]->data[o] = (int)(min(SAMPLE_MAX, max(SAMPLE_MIN, outputArray[i][o]*SAMPLE_SCALE+0.5)));
 #endif
+        // pass output buffers downstream
         transmit(outputBlocks[i], i);
       }
     }
 
+    // release all input buffers
     for(i = 0; i < inputs; ++i)
-      release(inputBlocks[i]);
+      if(inputBlocks[i])
+        release(inputBlocks[i]);
+
+    // release all output buffers
     for(i = 0; i < outputs; ++i)
-      release(outputBlocks[i]);
+      if(outputBlocks[i])
+        release(outputBlocks[i]);
+
 #else
+    // ------------------------------
     // reuse audio blocks
+    // ------------------------------
+
     for(i = 0; i < inputs; ++i) {
-      // reuse input blocks for output
+      // if possible, reuse input blocks for output
       inputBlocks[i] = i < outputs?receiveWritable(i):receiveReadOnly(i);
-      if(blocklength(inputBlocks[i]) == n) {
+      if(inputBlocks[i] && blocklength(inputBlocks[i]) == n) {
 #if OPENAUDIO
+        // directly use audio buffer for heavy
         inputArray[i] = inputBlocks[i]->data;
 #else
+        // use temporary block (int16 type) and scale input
+        // TODO: eventually use arm_math.h functions
         inputArray[i] = input_tmp[i];
-        for(int o = 0; o < n; ++n)
+        for(int o = 0; o < n; ++o)
           inputArray[i][o] = float(inputBlocks[i]->data[o])*(1./SAMPLE_SCALE);
 #endif
       }
@@ -175,29 +205,43 @@ protected:
 
     for(i = 0; i < outputs; ++i) {
       outputBlocks[i] = i < inputs?inputBlocks[i]:allocate();
+      if(outputBlocks[i]) {
 #if OPENAUDIO
-      outputArray[i] = outputBlocks[i]->data;
+        // directly use audio buffer for heavy
+        outputArray[i] = outputBlocks[i]->data;
 #else
-      outputArray[i] = output_tmp[i];
+        outputArray[i] = output_tmp[i];
 #endif
+      }
+      else
+        ok = false;
     }
 
     if(ok) {
+      // perform heavy DSP
       hv_instance.process(inputArray, outputArray, n);
 
       for(i = 0; i < outputs; ++i) {
 #if !(OPENAUDIO)
+        // we have to scale heavy output to int16 teensy Audio buffers
+        // TODO: eventually use arm_math.h functions
         for(int o = 0; o < n; ++o)
           outputBlocks[i]->data[o] = (int)(min(SAMPLE_MAX, max(SAMPLE_MIN, outputArray[i][o]*SAMPLE_SCALE+0.5)));
 #endif
+        // pass output buffers downstream
         transmit(outputBlocks[i], i);
       }
     }
 
+    // release all input buffers
     for(i = 0; i < inputs; ++i)
-      release(inputBlocks[i]);
+      if(inputBlocks[i])
+        release(inputBlocks[i]);
+
+    // release all output buffers that have not been used (and released already) as input buffers
     for(; i < outputs; ++i)
-      release(outputBlocks[i]);
+      if(outputBlocks[i])
+        release(outputBlocks[i]);
 #endif
   }
 

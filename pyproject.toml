@@ -1,6 +1,6 @@
 [project]
 name = "hvcc_teensy"
-version = "0.0.1"
+version = "0.1"
 authors = [
   { name="Thomas Grill", email="gr@grrrr.org" },
 ]
