@@ -245,7 +245,7 @@ protected:
 #endif
   }
 
-  virtual void receive(double timestampMs, const HvMessage *m)
+  virtual void receive(double timestampMs, const char *receiverName, const HvMessage *m)
   {
   }
 
@@ -284,10 +284,8 @@ private:
 
   static void sendHook(HeavyContextInterface *c, const char *receiverName, hv_uint32_t receiverHash, const HvMessage *m)
   {
-    if(!strcmp(receiverName, "HV_TO_TEENSY")) {
-      double timestampMs = 1000.0 * ((double) ::hv_msg_getTimestamp(m)) / c->getSampleRate();
-      getThis(c)->receive(timestampMs, m);
-    }
+    double timestampMs = 1000.0 * ((double) ::hv_msg_getTimestamp(m)) / c->getSampleRate();
+    getThis(c)->receive(timestampMs, receiverName, m);
   }
 };
 
