@@ -1,11 +1,10 @@
-#define OPENAUDIO 1
-#include <crossover_f32.h>
+#include <crossover_thru.h>
+crossover_thru xover;
 
 #if OPENAUDIO
 #include <OpenAudio_ArduinoLibrary.h>
 
 AudioInputI2S_F32 i2sin;
-crossover_f32 xover;
 AudioOutputI2S_F32 i2sout;
 AudioConnection_F32 patch_in(i2sin, 0, xover, 0);
 AudioConnection_F32 patch_lp(xover, 0, i2sout, 0), patch_hp(xover, 1, i2sout, 1);
@@ -14,7 +13,6 @@ AudioConnection_F32 patch_lp(xover, 0, i2sout, 0), patch_hp(xover, 1, i2sout, 1)
 #include <Audio.h>
 
 AudioInputI2S i2sin;
-crossover_f32 xover;
 AudioOutputI2S i2sout;
 AudioConnection patch_in(i2sin, 0, xover, 0);
 AudioConnection patch_lp(xover, 0, i2sout, 0), patch_hp(xover, 1, i2sout, 1);

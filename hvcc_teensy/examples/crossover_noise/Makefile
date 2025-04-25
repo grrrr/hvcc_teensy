@@ -1,13 +1,14 @@
 .PHONY: install clean
 
-NAME=crossover_f32
+NAME=crossover_noise
+OPENAUDIO=1
 DST=build
 
 $(DST)/teensy/$(NAME).h: _main.pd meta.json
 	hvcc $< -n $(NAME) -o $(DST) -G hvcc_teensy -m meta.json
 
 meta.json:
-	echo '{"external": {"OPENAUDIO": 1}}' > $@
+	echo '{"external": {"OPENAUDIO":' $(OPENAUDIO) '}}' > $@
 
 install:
 	ln -s $$PWD/$(DST)/teensy/ $$HOME/Documents/Arduino/libraries/$(NAME)

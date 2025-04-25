@@ -32,4 +32,4 @@ In the generated library folder will be a header file `$NAME.h` to be included i
 The produced code depends on the [Teensy core library](https://github.com/PaulStoffregen/cores).
 If `OPENAUDIO=1` is `#define`d before including the `$NAME.h` header file, the code will depend on [OpenAudio_ArduinoLibrary](https://github.com/chipaudette/OpenAudio_ArduinoLibrary) for float_32 audio processing extensions.
 
-In the example Makefiles (e.g., crossover_f32), this is taken care of by respective json metadata fed to the teensy generator.
+In the example Makefiles (e.g., sine_out), this is taken care of by respective json metadata fed to the teensy generator.

@@ -1,8 +1,7 @@
-#define OPENAUDIO 1
-#include <crossover_noise_f32.h>
+#include <crossover_noise.h>
 
 class _crossover_noise:
-  public crossover_noise_f32
+  public crossover_noise
 {
 protected:
   virtual void receive(double timestampMs, const char *receiverName, const HvMessage *m) 
@@ -16,36 +15,28 @@ protected:
       printf("RECV @ %g - %s %f\n", timestampMs, receiverName, f);
     }
   }
-};
+} xover;
 
 
 #if OPENAUDIO
 #include <OpenAudio_ArduinoLibrary.h>
 
 AudioSynthNoiseWhite_F32 noise;
-_crossover_noise xover;
 AudioConnection_F32 patch_in(noise, 0, xover, 0);
-
 AudioInputAnalog inp_frq(A0, false);
-AudioConvert_I16toF32  cnv_frq;
+AudioConvert_I16toF32 cnv_frq;
 AudioConnection conn_frq(inp_frq, 0, cnv_frq, 0);
 AudioConnection_F32 patch_frq(cnv_frq, 0, xover, 1);
-
 AudioOutputI2S_F32 i2sout;
 AudioConnection_F32 patch_lp(xover, 0, i2sout, 0), patch_hp(xover, 1, i2sout, 1);
 
 #else
-
 #include <Audio.h>
 
 AudioSynthNoiseWhite noise;
-_crossover_noise xover;
-
 AudioConnection patch_in(noise, 0, xover, 0);
-
 AudioInputAnalog inp_frq(A0, false);
 AudioConnection conn_frq(inp_frq, 0, xover, 1);
-
 AudioOutputI2S i2sout;
 AudioConnection patch_lp(xover, 0, i2sout, 0), patch_hp(xover, 1, i2sout, 1);
 
