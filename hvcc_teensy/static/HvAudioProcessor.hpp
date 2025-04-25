@@ -6,12 +6,10 @@
 #if OPENAUDIO
   #include <AudioStream_F32.h>
   #define AudioStream_CLASS AudioStream_F32
-  #define audio_block_TYPE audio_block_f32_t
   #define sample_TYPE float32_t
 #else
   #include <AudioStream.h>
   #define AudioStream_CLASS AudioStream
-  #define audio_block_TYPE audio_block_t
   #define sample_TYPE int16_t
   #define SAMPLE_MIN (-(1<<(sizeof(sample_TYPE)*8)))
   #define SAMPLE_MAX ((1<<(sizeof(sample_TYPE)*8))-1)
@@ -87,8 +85,8 @@ public:
 
 protected:
 
-#ifdef OPENAUDIO
-  typedef audio_block_TYPE audio_block_t;
+#if OPENAUDIO
+  typedef ::audio_block_f32_t audio_block_t;
   audio_block_t *allocate() { return AudioStream_CLASS::allocate_f32(); }
   audio_block_t *receiveReadOnly(unsigned int index = 0) { return AudioStream_CLASS::receiveReadOnly_f32(index); }
   audio_block_t *receiveWritable(unsigned int index = 0) { return AudioStream_CLASS::receiveWritable_f32(index); }
@@ -257,7 +255,7 @@ protected:
 private:
   hv_class hv_instance;
 
-  audio_block_TYPE *inputQueueArray[inputs];
+  audio_block_t *inputQueueArray[inputs];
 
 #if !(OPENAUDIO)
   float input_tmp[inputs][AUDIO_BLOCK_SAMPLES];
