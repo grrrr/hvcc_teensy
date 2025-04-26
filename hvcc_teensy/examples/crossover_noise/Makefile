@@ -6,6 +6,7 @@ DST=build
 
 $(DST)/teensy/$(NAME).h: _main.pd meta.json
 	hvcc $< -n $(NAME) -o $(DST) -G hvcc_teensy -m meta.json
+	echo "name=$(NAME)" > $(DST)/teensy/library.properties
 
 meta.json:
 	echo '{"external": {"OPENAUDIO":' $(OPENAUDIO) '}}' > $@

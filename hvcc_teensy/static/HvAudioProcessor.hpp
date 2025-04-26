@@ -94,7 +94,7 @@ protected:
   void release(audio_block_t *block) { AudioStream_CLASS::release(block); }
   static int blocklength(const audio_block_t *block) { return block->length; }
 #else
-  static int blocklength(const audio_block_t *block) { return AUDIO_BLOCK_SAMPLES; }
+  static int blocklength(const audio_block_t *) { return AUDIO_BLOCK_SAMPLES; }
 #endif
 
   void update()
